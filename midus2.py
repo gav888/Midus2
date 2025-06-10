@@ -81,7 +81,7 @@ def make_graph(matrix, labels, clusters, thr):
 # ────────────────────────────────────────────────────────────────────────────────
 
 # ─── Streamlit App ────────────────────────────────────────────────────────────
-st.set_page_config(page_title="MIDUS Code Clustering & Network Analysis", layout="wide")
+st.set_page_config(page_title="MIDUS Code Clustering & Network Analysis 2.0", layout="wide")
 st.title("MIDUS Code Clustering & Network Analysis")
 
 # Sidebar controls
@@ -257,37 +257,36 @@ if uploaded:
         nodes = pd.DataFrame({
             'Id': df2.columns,
             'Label': df2.columns,
-            'SemCluster': cl2['SemCluster'],
-            'HybridCluster': cl_hybrid2,
-            'Color': cl2['color']  # Use semantic colors for now
+            'SemCluster': cl2['SemCluster'] if 'SemCluster' in cl2 else [-1]*len(df2.columns),
+            'HybridCluster': cl_hybrid2 if sim_hybrid2 is not None else [-1]*len(df2.columns),
+            'Color': cl2['color'] if 'color' in cl2 else ['#CCCCCC']*len(df2.columns)
         })
 
-        # Create semantic edge list
-        edges_sem = []
-        for i in range(len(sim2)):
-            for j in range(i + 1, len(sim2)):
-                w = sim2[i, j]
-                if w > 0:
-                    edges_sem.append({
-                        'Source': df2.columns[i],
-                        'Target': df2.columns[j],
-                        'Weight': w
-                    })
-        edges_sem = pd.DataFrame(edges_sem)
+        # Ensure consistent dtypes
+        nodes = nodes.astype({
+            'Id': str,
+            'Label': str,
+            'SemCluster': int,
+            'HybridCluster': int,
+            'Color': str
+        })
 
-        # Create hybrid edge list
-        edges_hybrid = []
+        # Semantic edge list
+        edges_sem = [
+            {'Source': df2.columns[i], 'Target': df2.columns[j], 'Weight': float(sim2[i, j])}
+            for i in range(len(sim2)) for j in range(i + 1, len(sim2))
+            if sim2[i, j] > 0
+        ]
+        edges_sem = pd.DataFrame(edges_sem, columns=['Source', 'Target', 'Weight'])
+
+        # Hybrid edge list
         if sim_hybrid2 is not None:
-            for i in range(len(sim_hybrid2)):
-                for j in range(i + 1, len(sim_hybrid2)):
-                    w = sim_hybrid2[i, j]
-                    if w > 0:
-                        edges_hybrid.append({
-                            'Source': df2.columns[i],
-                            'Target': df2.columns[j],
-                            'Weight': w
-                        })
-            edges_hybrid = pd.DataFrame(edges_hybrid)
+            edges_hybrid = [
+                {'Source': df2.columns[i], 'Target': df2.columns[j], 'Weight': float(sim_hybrid2[i, j])}
+                for i in range(len(sim_hybrid2)) for j in range(i + 1, len(sim_hybrid2))
+                if sim_hybrid2[i, j] > 0
+            ]
+            edges_hybrid = pd.DataFrame(edges_hybrid, columns=['Source', 'Target', 'Weight'])
         else:
             edges_hybrid = pd.DataFrame(columns=['Source', 'Target', 'Weight'])
 

@@ -253,13 +253,16 @@ if uploaded:
         # --- Gephi Export Section ---
         import zipfile
 
+        # Prepare labels
+        labels = df2.columns.astype(str)
+
         # Create node list
         nodes = pd.DataFrame({
-            'Id': df2.columns,
-            'Label': df2.columns,
-            'SemCluster': cl2['SemCluster'] if 'SemCluster' in cl2 else [-1]*len(df2.columns),
-            'HybridCluster': cl_hybrid2 if sim_hybrid2 is not None else [-1]*len(df2.columns),
-            'Color': cl2['color'] if 'color' in cl2 else ['#CCCCCC']*len(df2.columns)
+            'Id': labels,
+            'Label': labels,
+            'SemCluster': cl2['SemCluster'] if 'SemCluster' in cl2 else [-1]*len(labels),
+            'HybridCluster': cl_hybrid2 if sim_hybrid2 is not None else [-1]*len(labels),
+            'Color': cl2['color'] if 'color' in cl2 else ['#CCCCCC']*len(labels)
         })
 
         # Ensure consistent dtypes
@@ -273,7 +276,7 @@ if uploaded:
 
         # Semantic edge list
         edges_sem = [
-            {'Source': df2.columns[i], 'Target': df2.columns[j], 'Weight': float(sim2[i, j])}
+            {'Source': labels[i], 'Target': labels[j], 'Weight': float(sim2[i, j])}
             for i in range(len(sim2)) for j in range(i + 1, len(sim2))
             if sim2[i, j] > 0
         ]
@@ -282,7 +285,7 @@ if uploaded:
         # Hybrid edge list
         if sim_hybrid2 is not None:
             edges_hybrid = [
-                {'Source': df2.columns[i], 'Target': df2.columns[j], 'Weight': float(sim_hybrid2[i, j])}
+                {'Source': labels[i], 'Target': labels[j], 'Weight': float(sim_hybrid2[i, j])}
                 for i in range(len(sim_hybrid2)) for j in range(i + 1, len(sim_hybrid2))
                 if sim_hybrid2[i, j] > 0
             ]
